@@ -1,0 +1,156 @@
+%% ===========================
+%% CineWave Domain Model (UML)
+%% ===========================
+
+classDiagram
+    %% ==== USER DOMAIN ====
+
+    class User {
+        +UUID id
+        +string email
+        +string password_hash
+        +UserRole role
+        +datetime created_at
+    }
+    class UserRole {
+        <<enum>>
+        USER
+        ADMIN
+    }
+
+    %% ==== MOVIE DOMAIN ====
+
+    class Movie {
+        +UUID id
+        +string title
+        +string genre
+        +string language
+        +int duration
+        +string rating
+        +string description
+    }
+
+    class Theater {
+        +UUID id
+        +string name
+        +string location
+        +int number_of_screens
+        +json seat_map
+    }
+
+    class Showtime {
+        +UUID id
+        +UUID movie_id
+        +UUID theater_id
+        +datetime start_time
+        +datetime end_time
+        +decimal price
+    }
+
+    Movie "1" --> "many" Showtime : schedules >
+    Theater "1" --> "many" Showtime : hosts >
+
+    %% ==== RESERVATION DOMAIN ====
+
+    class Reservation {
+        +UUID id
+        +UUID user_id
+        +UUID showtime_id
+        +ReservationStatus status
+        +datetime created_at
+        +datetime updated_at
+    }
+
+    class ReservationStatus {
+        <<enum>>
+        PENDING
+        CONFIRMED
+        CANCELLED
+    }
+
+    class Seat {
+        +UUID id
+        +UUID showtime_id
+        +string row
+        +int number
+        +bool is_reserved
+    }
+
+    class Ticket {
+        +UUID id
+        +UUID reservation_id
+        +UUID seat_id
+        +decimal price
+        +datetime issued_at
+    }
+
+    Reservation "1" --> "many" Ticket : includes >
+    Reservation "1" --> "many" Seat : reserves >
+
+    %% ==== PAYMENT DOMAIN ====
+
+    class Payment {
+        +UUID id
+        +UUID reservation_id
+        +UUID user_id
+        +decimal amount
+        +string currency
+        +PaymentStatus status
+        +string payment_method
+        +string transaction_reference
+        +datetime created_at
+    }
+
+    class PaymentStatus {
+        <<enum>>
+        INITIATED
+        SUCCESS
+        FAILED
+    }
+
+    Reservation "1" --> "1" Payment : triggers >
+
+    %% ==== NOTIFICATION DOMAIN ====
+
+    class Notification {
+        +UUID id
+        +UUID user_id
+        +NotificationType type
+        +string template
+        +json payload
+        +NotificationStatus status
+        +datetime sent_at
+    }
+
+    class NotificationType {
+        <<enum>>
+        EMAIL
+        SMS
+    }
+
+    class NotificationStatus {
+        <<enum>>
+        SENT
+        FAILED
+    }
+
+    Payment "1" --> "1" Notification : emits >
+    Reservation "1" --> "1" Notification : emits >
+
+    %% ==== SEARCH DOMAIN ====
+
+    class SearchIndex {
+        +UUID id
+        +string type
+        +json data
+        +datetime indexed_at
+    }
+
+    Movie "1" --> "1" SearchIndex : updates >
+    Theater "1" --> "1" SearchIndex : updates >
+
+    %% ==== CROSS-DOMAIN RELATIONSHIPS ====
+
+    User "1" --> "many" Reservation : makes >
+    User "1" --> "many" Payment : pays >
+    Showtime "1" --> "many" Reservation : available for >

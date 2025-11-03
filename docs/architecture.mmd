@@ -1,0 +1,35 @@
+flowchart LR
+%% CLIENT & GATEWAY
+C[Client] --> G[API Gateway]
+G -->|Rate Limit| RL[(Rate Limit)]
+
+    %% GATEWAY ROUTES
+    G --> US[User Service]
+    G --> MS[Movie Service]
+    G --> RS[Reservation Service]
+    G --> SS[Search Service]
+
+    %% USER SERVICE
+    US --> UDB[(User DB)]
+    US --> RS
+
+    %% MOVIE SERVICE
+    MS --> MDB[(Movie DB)]
+    MS --> MCache[(Cache)]
+
+    %% SEARCH SERVICE
+    SS --> SCache[(Cache)]
+    SS --> SDB[(Search DB)]
+
+    %% RESERVATION SERVICE
+    RS --> RDB[(Reservation DB)]
+    RS --> RCache[(Cache)]
+    RS --> PS[Payment Service]
+
+    %% PAYMENT SERVICE
+    PS --> PDB[(Payment DB)]
+    PS --> MB1[(Message Broker)]
+    PS --> NS[Notification Service]
+
+    %% NOTIFICATION SERVICE
+    NS --> MB2[(Message Broker)]
